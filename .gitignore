@@ -1,0 +1,47 @@
+# =========================
+# SECRETOS Y CONFIGURACIÓN (¡Lo más importante!)
+# =========================
+.env
+.env.local
+.env.*
+
+# =========================
+# PYTHON Y DJANGO
+# =========================
+__pycache__/
+*.py[cod]
+*$py.class
+*.sqlite3
+db.sqlite3
+
+# =========================
+# ENTORNO VIRTUAL
+# =========================
+venv/
+env/
+ENV/
+
+# =========================
+# ARCHIVOS ESTÁTICOS Y MEDIA
+# =========================
+staticfiles/
+media/
+uploads/
+
+# =========================
+# FRONTEND (Para cuando sumes Next.js/React)
+# =========================
+node_modules/
+.next/
+out/
+build/
+dist/
+
+# =========================
+# SISTEMA OPERATIVO Y Editores (IDE)
+# =========================
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+*.swp
