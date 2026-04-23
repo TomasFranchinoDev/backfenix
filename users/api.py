@@ -13,6 +13,18 @@ logger = logging.getLogger(__name__)
 router = Router(tags=["users"], auth=auth_supabase)
 
 
+def serialize_cliente(cliente: Cliente) -> dict:
+    return {
+        "id": cliente.id,
+        "email": cliente.email,
+        "nombre_completo": cliente.nombre_completo,
+        "telefono": cliente.telefono,
+        "empresa": cliente.empresa,
+        "es_admin": cliente.es_admin,
+        "creado_en": cliente.creado_en,
+    }
+
+
 @router.get("/me", response=ClienteSchema)
 def mi_perfil(request):
     logger.info(
@@ -20,7 +32,7 @@ def mi_perfil(request):
         bool(request.headers.get("Authorization")),
         getattr(request, "auth_payload", {}).get("sub") if hasattr(request, "auth_payload") else None,
     )
-    return request.auth
+    return serialize_cliente(request.auth)
 
 
 @router.put("/me", response=ClienteSchema)
@@ -30,7 +42,7 @@ def actualizar_perfil(request, payload: ClienteUpdate):
     cliente.telefono = payload.telefono or ""
     cliente.empresa = payload.empresa or ""
     cliente.save(update_fields=["nombre_completo", "telefono", "empresa"])
-    return cliente
+    return serialize_cliente(cliente)
 
 
 @router.post("/registro", auth=auth_registro, response=ClienteSchema)
@@ -64,4 +76,4 @@ def registrar_cliente(request, payload: RegistroClienteIn):
         cliente.telefono = payload.telefono or ""
         cliente.save(update_fields=["email", "nombre_completo", "empresa", "telefono"])
 
-    return cliente
+    return serialize_cliente(cliente)

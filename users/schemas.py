@@ -11,6 +11,7 @@ class ClienteSchema(Schema):
     nombre_completo: str
     telefono: str
     empresa: str
+    es_admin: bool
     creado_en: datetime
 
 
