@@ -5,7 +5,9 @@ import cloudinary
 import cloudinary.utils
 
 from django.db import transaction
+from django.db.models import Q
 from ninja import Router
+from ninja import Schema
 from ninja.errors import HttpError
 from catalog.models import Producto, ProductoImagen
 from catalog.schemas import ProductoIn, ProductoOut, ProductoUpdate
@@ -14,6 +16,26 @@ from orders.schemas import EstadoOrdenUpdate, MessageOut, OrdenAdminOut, OrdenAd
 from users.auth import auth_admin
 
 router = Router(tags=["admin"], auth=auth_admin)
+
+
+class AdminSearchOrderResult(Schema):
+    id: UUID
+    codigo_orden: str
+    cliente_nombre: str
+    cliente_empresa: str
+    estado: str
+
+
+class AdminSearchProductResult(Schema):
+    id: UUID
+    nombre: str
+    sku: Optional[str] = None
+    activo: bool
+
+
+class AdminSearchResponse(Schema):
+    ordenes: list[AdminSearchOrderResult]
+    productos: list[AdminSearchProductResult]
 
 @router.get("/cloudinary-signature")
 def get_cloudinary_signature(request):
@@ -35,6 +57,56 @@ def get_cloudinary_signature(request):
         "api_key": cloudinary.config().api_key,
         "cloud_name": cloudinary.config().cloud_name,
         "folder": "fenix_productos"
+    }
+
+
+@router.get("/search", response=AdminSearchResponse)
+def buscar_admin(request, q: str = ""):
+    query = q.strip()
+
+    if len(query) < 2:
+        return {
+            "ordenes": [],
+            "productos": [],
+        }
+
+    ordenes = (
+        Orden.objects
+        .select_related("cliente")
+        .filter(
+            Q(codigo_orden__icontains=query)
+            | Q(cliente__nombre_completo__icontains=query)
+            | Q(cliente__empresa__icontains=query)
+        )
+        .order_by("-creado_en")[:5]
+    )
+
+    productos = (
+        Producto.objects
+        .filter(nombre__icontains=query)
+        .order_by("-creado_en")[:5]
+    )
+
+    return {
+        "ordenes": [
+            {
+                "id": orden.id,
+                "codigo_orden": orden.codigo_orden,
+                "cliente_nombre": orden.cliente.nombre_completo,
+                "cliente_empresa": orden.cliente.empresa,
+                "estado": orden.estado,
+            }
+            for orden in ordenes
+        ],
+        "productos": [
+            {
+                "id": producto.id,
+                "nombre": producto.nombre,
+                "sku": producto.sku,
+                "activo": producto.activo,
+            }
+            for producto in productos
+        ],
     }
 
 
