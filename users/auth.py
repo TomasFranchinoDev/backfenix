@@ -114,16 +114,18 @@ class SupabaseAuth(HttpBearer):
             cliente = Cliente.objects.filter(id=cliente_id).first()
             
             if not cliente:
-                # Auto-crear el cliente con los datos del JWT validado
-                # El JWT ya pasó validación de Supabase, es seguro
+                # --- NUEVA LÓGICA: Extraer datos del user_metadata ---
+                user_metadata = payload.get("user_metadata", {})
+                
                 cliente = Cliente.objects.create(
                     id=cliente_id,
                     email=payload.get("email", ""),
-                    nombre_completo="",
-                    empresa="",
-                    telefono="",
+                    nombre_completo=user_metadata.get("nombre_completo", ""),
+                    empresa=user_metadata.get("empresa", ""),
+                    telefono=user_metadata.get("telefono", ""),
                 )
-                logger.info("Cliente auto-creado en BD: %s", cliente_id)
+                logger.info("Cliente auto-creado en BD con metadata: %s", cliente_id)
+                # -----------------------------------------------------
                 
             request.auth_payload = payload
             return cliente
