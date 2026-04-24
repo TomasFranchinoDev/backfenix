@@ -38,6 +38,20 @@ def crear_orden(request, payload: OrdenIn):
                 raise HttpError(400, f"Producto inválido o inactivo: {item.producto_id}")
 
             precio_unitario = producto.precio_base
+            
+            # --- LÓGICA: Calcular recargos de variantes ---
+            esquema_opciones = producto.esquema_opciones or {}
+            variantes_elegidas = item.variantes or {}
+
+            for categoria, valor_elegido in variantes_elegidas.items():
+                opciones_disponibles = esquema_opciones.get(categoria, [])
+                for opcion in opciones_disponibles:
+                    if str(opcion.get("label")) == str(valor_elegido):
+                        extra = Decimal(str(opcion.get("extra", 0)))
+                        precio_unitario += extra
+                        break
+            # ----------------------------------------------------
+
             subtotal = precio_unitario * item.cantidad
             total += subtotal
 
