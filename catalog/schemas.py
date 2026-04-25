@@ -68,3 +68,12 @@ class ProductoOut(Schema):
     @staticmethod
     def resolve_imagenes(obj):
         return obj.imagenes.all().order_by("orden", "id")
+
+
+class ValidarCarritoIn(Schema):
+    producto_ids: list[UUID] = Field(default_factory=list)
+
+
+class ValidarCarritoOut(Schema):
+    disponibles: list[UUID] = Field(default_factory=list)
+    no_disponibles: list[UUID] = Field(default_factory=list)
